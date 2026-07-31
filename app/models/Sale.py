@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item_Sale import Item_Sale
 
-table_registry = registry()
+from app.models.registry_tables import table_registry
 
 
 @table_registry.mapped_as_dataclass

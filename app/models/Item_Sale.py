@@ -1,12 +1,12 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, registry
+from sqlalchemy.orm import Mapped, mapped_column
 
-table_registry = registry()
+from app.models.registry_tables import table_registry
 
 
 @table_registry.mapped_as_dataclass
 class Item_Sale:
-    __tablename__ = 'Item_Sale'
+    __tablename__ = 'item_sale'
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
 

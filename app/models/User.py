@@ -1,14 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import func
-from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item import Item
 from app.models.Item_Sale import Item_Sale
 from app.models.Sale import Sale
 
-table_registry = registry()
-
+from app.models.registry_tables import table_registry
 
 @table_registry.mapped_as_dataclass
 class User:
