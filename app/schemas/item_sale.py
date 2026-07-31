@@ -8,6 +8,10 @@ class ItemSaleSchema(BaseModel):
     amount: int
     value: int
 
+class ItemSaleCreate(BaseModel):
+    item_id: int
+    user_id: int
+    amount: int
 
 class ItemSalePublic(ItemSaleSchema):
     id: int

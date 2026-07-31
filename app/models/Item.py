@@ -1,16 +1,17 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+import sqlalchemy as sa
 
 from app.models.Item_Sale import Item_Sale
 from app.models.registry_tables import table_registry
 
 
 class ItemState(str, Enum):
-    avaible = 'avaible'
-    unavaible = 'unavaible'
+    available = 'available'
+    unavailable = 'unavailable'
     trash = 'trash'
 
 
@@ -24,7 +25,10 @@ class Item:
     amount: Mapped[int] = mapped_column(server_default='0')
     value: Mapped[float] = mapped_column(server_default='0.00')
 
-    state: Mapped[ItemState] = mapped_column(server_default=ItemState.avaible)
+    state: Mapped[ItemState] = mapped_column(
+        sa.Enum(ItemState, name="itemstate"), 
+        server_default=text("'available'::itemstate") 
+    )
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()
     )

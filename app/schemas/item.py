@@ -10,7 +10,7 @@ class ItemSchema(BaseModel):
     description: str
     value: float
     amount: int
-    state: ItemState = Field(default=ItemState.avaible)
+    state: ItemState = Field(default=ItemState.available)
 
 
 class ItemPublic(ItemSchema):
