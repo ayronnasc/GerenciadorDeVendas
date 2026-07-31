@@ -5,8 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.Item import Item
-from app.models.User import User
+from app.models import Item, User
 from app.schemas.application import Message
 from app.schemas.filters import FilterItem
 from app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
@@ -20,6 +19,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post('/', response_model=ItemPublic, status_code=HTTPStatus.CREATED)
 async def create_Item(item: ItemSchema, session: Session, user: CurrentUser):
+
     db_item = Item(
         title=item.title,
         description=item.description,
@@ -42,8 +42,9 @@ async def list_items(
     session: Session,
     item_filter: Annotated[FilterItem, Query()],
 ):
+    
     query = select(Item).where(Item.user_id == user.id)
-
+    
     if item_filter.title:
         query = query.filter(Item.title.contains(item_filter.title))
     if item_filter.description:
@@ -56,7 +57,6 @@ async def list_items(
         query = query.filter(Item.amount == item_filter.amount)
     if item_filter.state:
         query = query.filter(Item.state == item_filter.state)
-
     items = await session.scalars(
         query.limit(item_filter.limit).offset(item_filter.offset)
     )

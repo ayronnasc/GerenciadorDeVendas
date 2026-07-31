@@ -20,7 +20,7 @@ class ItemPublic(ItemSchema):
 
 
 class ItemList(BaseModel):
-    todos: list[ItemPublic]
+    items: list[ItemPublic]
 
 
 class ItemUpdate(BaseModel):

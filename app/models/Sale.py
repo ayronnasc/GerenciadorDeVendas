@@ -4,7 +4,6 @@ from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item_Sale import Item_Sale
-
 from app.models.registry_tables import table_registry
 
 
@@ -14,10 +13,10 @@ class Sale:
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     description: Mapped[str] = mapped_column(
-        init=False, server_default='Sale without description'
+        server_default='Sale without description'
     )
 
-    total: Mapped[float] = mapped_column(init=False, server_default='0.00')
+    total: Mapped[float] = mapped_column(server_default='0.00')
 
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()

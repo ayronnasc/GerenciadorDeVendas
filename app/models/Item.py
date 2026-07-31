@@ -5,7 +5,6 @@ from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item_Sale import Item_Sale
-
 from app.models.registry_tables import table_registry
 
 
@@ -22,12 +21,10 @@ class Item:
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     title: Mapped[str]
     description: Mapped[str]
-    amount: Mapped[int] = mapped_column(init=False, server_default='0')
-    value: Mapped[float] = mapped_column(init=False, server_default='0.00')
+    amount: Mapped[int] = mapped_column(server_default='0')
+    value: Mapped[float] = mapped_column(server_default='0.00')
 
-    state: Mapped[ItemState] = mapped_column(
-        init=False, server_default=ItemState.avaible
-    )
+    state: Mapped[ItemState] = mapped_column(server_default=ItemState.avaible)
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()
     )

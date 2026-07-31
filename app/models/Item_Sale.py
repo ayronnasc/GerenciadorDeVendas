@@ -10,8 +10,8 @@ class Item_Sale:
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
 
-    amount: Mapped[int] = mapped_column(init=False, server_default='0')
-    value: Mapped[float] = mapped_column(init=False, server_default='0.00')
+    amount: Mapped[int] = mapped_column(server_default='0')
+    value: Mapped[float] = mapped_column(server_default='0.00')
 
     item_id: Mapped[int] = mapped_column(ForeignKey('items.id'))
     sale_id: Mapped[int] = mapped_column(ForeignKey('sales.id'))
