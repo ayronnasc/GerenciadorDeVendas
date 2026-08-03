@@ -48,7 +48,7 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
     return db_sale
 
 
-@router.get('/{sale_id}', status_code=HTTPStatus.CREATED)
+@router.get('/{sale_id}', status_code=HTTPStatus.OK, response_model=SalePublic)
 async def create_sale(sale_id: int, session: Session, user: CurrentUser):
 
     db_sale = await session.scalar(select(Sale).where(Sale.user_id == user.id, Sale.id == sale_id).options(selectinload(Sale.items)))
@@ -57,6 +57,5 @@ async def create_sale(sale_id: int, session: Session, user: CurrentUser):
         print(assoc.value)
         print(assoc.items)
 
-    breakpoint()
     
     return db_sale

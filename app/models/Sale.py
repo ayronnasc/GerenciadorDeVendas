@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.models.registry_tables import table_registry
 from app.models import Item_Sale
-from app.models import Item
 
 @table_registry.mapped_as_dataclass
 class Sale:
