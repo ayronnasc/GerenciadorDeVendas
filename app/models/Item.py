@@ -1,11 +1,11 @@
 from datetime import datetime
 from enum import Enum
 
+from typing import List
 from sqlalchemy import ForeignKey, func, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 import sqlalchemy as sa
 
-from app.models.Item_Sale import Item_Sale
 from app.models.registry_tables import table_registry
 
 
@@ -21,7 +21,9 @@ class Item:
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     title: Mapped[str]
+
     description: Mapped[str]
+
     amount: Mapped[int] = mapped_column(server_default='0')
     value: Mapped[float] = mapped_column(server_default='0.00')
 
@@ -37,7 +39,3 @@ class Item:
     )
 
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-
-    item_sale: Mapped[list['Item_Sale']] = relationship(
-        init=False, cascade='all, delete-orphan', lazy='selectin'
-    )

@@ -1,19 +1,20 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.models import Item, Sale
+
+from typing import Optional
 
 from app.models.registry_tables import table_registry
 
 
 @table_registry.mapped_as_dataclass
-class Item_Sale:
+class Item_Sale:#association_table
     __tablename__ = 'item_sale'
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), primary_key=True, init=False)
+    sale_id: Mapped[int] = mapped_column(ForeignKey('sales.id'), primary_key=True, init=False)
 
-    amount: Mapped[int] = mapped_column(server_default='0')
-    value: Mapped[float] = mapped_column(server_default='0.00')
+    amount: Mapped[Optional[int]]
+    value: Mapped[Optional[float]]
 
-    item_id: Mapped[int] = mapped_column(ForeignKey('items.id'))
-    sale_id: Mapped[int] = mapped_column(ForeignKey('sales.id'))
-
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    items: Mapped["Item"] = relationship()

@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from typing import List
+
 from app.schemas.item_sale import (
     ItemSaleSchema,
     ItemSaleCreate
@@ -13,11 +15,18 @@ from app.schemas.item import ItemPublic
 class SaleSchema(BaseModel):
     description: str
     items: list[ItemSaleCreate]
+    
+
+class SaleItemPublic(BaseModel):
+    amount: int 
+    value: float
+    items: ItemPublic
 
 
 class SalePublic(SaleSchema):
     id: int
-    items: list[ItemPublic]
+    total: float
+    items: List[SaleItemPublic]
     created_at: datetime
     updated_at: datetime
 

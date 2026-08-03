@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item import Item
-from app.models.Item_Sale import Item_Sale
+
 from app.models.registry_tables import table_registry
 from app.models.Sale import Sale
 
@@ -29,9 +29,5 @@ class User:
     )
 
     sales: Mapped[list['Sale']] = relationship(
-        init=False, cascade='all, delete-orphan', lazy='selectin'
-    )
-
-    item_sale: Mapped[list['Item_Sale']] = relationship(
         init=False, cascade='all, delete-orphan', lazy='selectin'
     )
