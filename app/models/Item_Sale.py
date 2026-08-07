@@ -17,4 +17,10 @@ class Item_Sale:#association_table
     amount: Mapped[Optional[int]]
     value: Mapped[Optional[float]]
 
-    items: Mapped["Item"] = relationship()
+    item: Mapped["Item"] = relationship()
+
+    sales: Mapped["Sale"] = relationship(
+        argument="Sale",
+        back_populates="item_sale",
+        init=False
+    )

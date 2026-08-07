@@ -26,7 +26,7 @@ class SaleItemPublic(BaseModel):
 class SalePublic(SaleSchema):
     id: int
     total: float
-    items: List[SaleItemPublic]
+    items: list[ItemPublic]
     created_at: datetime
     updated_at: datetime
 

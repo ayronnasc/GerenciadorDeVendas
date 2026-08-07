@@ -2,10 +2,13 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy import ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.registry_tables import table_registry
-from app.models import Item_Sale
+from app.models import Item
+from app.models.Item_Sale import Item_Sale
+from app.schemas.sale import SalePublic
+from app.schemas.item import ItemPublic
 
 @table_registry.mapped_as_dataclass
 class Sale:
@@ -28,10 +31,55 @@ class Sale:
 
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
-    items: Mapped[List["Item_Sale"]] = relationship(
+    item_sale: Mapped[List["Item_Sale"]] = relationship(
         argument="Item_Sale",
         init=False, 
         cascade='all, '
         'delete-orphan', 
-        lazy='selectin'
+        lazy='selectin',
+        default_factory=list,
+        back_populates="sales"
     )
+
+    @property
+    def item_list(self) -> list[ItemPublic]:
+        item_list = []
+        for item_sale in self.item_sale:
+            item_sale.item.value = item_sale.value
+            item_sale.item.amount = item_sale.amount
+            item_list.append(ItemPublic(
+                id=item_sale.item.id,
+                title=item_sale.item.title,
+                description=item_sale.item.description,
+                value=item_sale.item.value,
+                amount=item_sale.item.amount,
+                state=item_sale.item.state,
+                created_at=item_sale.item.created_at,
+                updated_at=item_sale.item.updated_at,
+            ))
+        return item_list
+
+    def __get__(self):
+        return SalePublic(
+            description=self.description,
+            items=self.item_list,
+            id=self.id,
+            total=self.total,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
+
+    def add_item(self, item: Item, amount: int = 0, value: float = 0.00):
+        for i_s in self.item_sale:
+            if i_s.item == item:
+                i_s.amount = amount
+                i_s.value  = value
+                return
+
+        self.total += (amount * value)
+        new_item_sale = Item_Sale(item=item,amount=amount, value=value)
+        self.item_sale.append(new_item_sale)
+
+    
+
+

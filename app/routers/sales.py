@@ -1,17 +1,16 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from sqlalchemy import select
-from app.models import Item_Sale
 from app.models import Item
-from app.models.Item import ItemState
 from app.models import Sale
 from app.models import User
 from app.schemas.sale import SalePublic, SaleSchema
+from app.schemas.filters import FilterSale
 from app.security import get_current_user, get_session
 
 router = APIRouter(prefix='/sales', tags=['sales'])
@@ -22,7 +21,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post('/', response_model=SalePublic, status_code=HTTPStatus.CREATED)
 async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
-
+    
     total = 0.0
 
     db_sale = Sale(
@@ -30,32 +29,50 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
         user_id=user.id,
         total=total,
     )
-
+    
     for item in sale.items:
         _item = await session.scalar(select(Item).where(Item.id == item.item_id))
         if not _item: 
             raise HTTPException(status_code=HTTPStatus.CONFLICT, detail="the item does not exists")
-
-        total += _item.value * item.amount
-        db_sale.items.append(Item_Sale(amount=item.amount, value=_item.value, items=_item))
-
-    db_sale.total = total
-
+        db_sale.add_item(_item, amount=item.amount, value=_item.value)
+    
     session.add(db_sale)
     await session.commit()
     await session.refresh(db_sale)
-
-    return db_sale
+    
+    return db_sale.__get__()
 
 
 @router.get('/{sale_id}', status_code=HTTPStatus.OK, response_model=SalePublic)
-async def create_sale(sale_id: int, session: Session, user: CurrentUser):
+async def get_sale(sale_id: int, session: Session, user: CurrentUser):
 
-    db_sale = await session.scalar(select(Sale).where(Sale.user_id == user.id, Sale.id == sale_id).options(selectinload(Sale.items)))
-    for assoc in db_sale.items:
-        print(assoc.amount)
-        print(assoc.value)
-        print(assoc.items)
-
+    db_sale = await session.scalar(select(Sale).where(Sale.user_id == user.id, Sale.id == sale_id).options(selectinload(Sale.item_sale)))
     
-    return db_sale
+    return db_sale.__get__()
+
+@router.get('/{sale_id}', status_code=HTTPStatus.OK, response_model=SalePublic)
+async def list_items(
+    user: CurrentUser,
+    session: Session,
+    sale_filter: Annotated[FilterSale, Query()],
+):
+    
+    query = select(Item).where(Item.user_id == user.id)
+    
+    if item_filter.title:
+        query = query.filter(Item.title.contains(item_filter.title))
+    if item_filter.description:
+        query = query.filter(
+            Item.description.contains(item_filter.description)
+        )
+    if item_filter.value:
+        query = query.filter(Item.value == item_filter.value)
+    if item_filter.amount:
+        query = query.filter(Item.amount == item_filter.amount)
+    if item_filter.state:
+        query = query.filter(Item.state == item_filter.state)
+    items = await session.scalars(
+        query.limit(item_filter.limit).offset(item_filter.offset)
+    )
+
+    return {'items': items.all()}
