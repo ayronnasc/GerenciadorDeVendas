@@ -1,17 +1,23 @@
 from pydantic import BaseModel
 
+from app.schemas.item import ItemPublic
 
 class ItemSaleSchema(BaseModel):
     sale_id: int
     item_id: int
-    user_id: int
     amount: int
-    value: int
+    value: float
+
+    model_config = {"from_attributes": True}
 
 class ItemSaleCreate(BaseModel):
     item_id: int
-    user_id: int
     amount: int
 
-class ItemSalePublic(ItemSaleSchema):
-    id: int
+class ItemSalePublic(BaseModel):
+    amount: int 
+    value: float
+    
+    item: ItemPublic
+
+    model_config = {"from_attributes": True}

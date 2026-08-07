@@ -59,16 +59,6 @@ class Sale:
             ))
         return item_list
 
-    def __get__(self):
-        return SalePublic(
-            description=self.description,
-            items=self.item_list,
-            id=self.id,
-            total=self.total,
-            created_at=self.created_at,
-            updated_at=self.updated_at
-        )
-
     def add_item(self, item: Item, amount: int = 0, value: float = 0.00):
         for i_s in self.item_sale:
             if i_s.item == item:

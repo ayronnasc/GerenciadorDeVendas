@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from typing import List
 
 from app.schemas.item_sale import (
     ItemSaleSchema,
-    ItemSaleCreate
+    ItemSaleCreate,
+    ItemSalePublic
 )
 
 from app.schemas.item import ItemPublic
@@ -15,6 +16,8 @@ from app.schemas.item import ItemPublic
 class SaleSchema(BaseModel):
     description: str
     items: list[ItemSaleCreate]
+
+    model_config = {"from_attributes": True}
     
 
 class SaleItemPublic(BaseModel):
@@ -26,13 +29,13 @@ class SaleItemPublic(BaseModel):
 class SalePublic(SaleSchema):
     id: int
     total: float
-    items: list[ItemPublic]
+    items: list[ItemSalePublic] = Field(validation_alias="item_sale")
     created_at: datetime
     updated_at: datetime
 
 
 class SaleList(BaseModel):
-    todos: list[SalePublic]
+    sales: list[SalePublic]
 
 
 class SaleUpdate(BaseModel):

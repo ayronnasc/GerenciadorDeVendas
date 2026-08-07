@@ -12,11 +12,18 @@ class ItemSchema(BaseModel):
     amount: int
     state: ItemState = Field(default=ItemState.available)
 
+    model_config = {"from_attributes": True}
 
-class ItemPublic(ItemSchema):
+#Parei aqui! preciso criar outro itempublic para o view do proprio item!
+class ItemPublic(BaseModel):
     id: int
+    title: str
+    description: str
+    state: ItemState = Field(default=ItemState.available)
     created_at: datetime
     updated_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class ItemList(BaseModel):
