@@ -12,6 +12,7 @@ from app.models.Item_Sale import Item_Sale
 from app.models import User
 from app.schemas.sale import SalePublic, SaleSchema, SaleList, SaleUpdate, SaleResponse
 from app.schemas.filters import FilterSale
+from app.schemas.application import Message
 from app.security import get_current_user, get_session
 
 router = APIRouter(prefix='/sales', tags=['sales'])
@@ -74,7 +75,7 @@ async def list_items(
 @router.patch('/{sale_id}', response_model=SaleResponse, status_code=HTTPStatus.OK)
 async def update_sale(sale_id: int, sale: SaleUpdate, session: Session, user: CurrentUser):
 
-    db_sale = await session.scalar(select(Sale).where(Sale.id == sale_id))
+    db_sale = await session.scalar(select(Sale).where(Sale.id == sale_id, Sale.user_id == user.id))
 
     if not db_sale:
         raise HTTPException(
@@ -121,3 +122,20 @@ async def update_sale(sale_id: int, sale: SaleUpdate, session: Session, user: Cu
     await session.refresh(db_sale)
     
     return SaleResponse(sale=db_sale)
+
+@router.delete('/{sale_id}', response_model=Message, status_code=HTTPStatus.OK)
+async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
+    db_sale = await session.scalar(select(Sale).where(Sale.id == sale_id, Sale.user_id == user.id))
+
+    if not db_sale:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Sale not found"
+        )
+
+    await session.delete(db_sale)
+    await session.commit()
+
+    return {"message":"Sale deleted with success!"}
+ 
+    
