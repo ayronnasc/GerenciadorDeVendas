@@ -42,9 +42,9 @@ async def list_items(
     session: Session,
     item_filter: Annotated[FilterItem, Query()],
 ):
-    
+
     query = select(Item).where(Item.user_id == user.id)
-    
+
     if item_filter.title:
         query = query.filter(Item.title.contains(item_filter.title))
     if item_filter.description:

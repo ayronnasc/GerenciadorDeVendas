@@ -1,27 +1,25 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from typing import List, Optional
-
+from app.schemas.item import ItemPublic
 from app.schemas.item_sale import (
-    ItemSaleSchema,
     ItemSaleCreate,
     ItemSalePublic,
-    ItemSaleUpdate
+    ItemSaleUpdate,
 )
-
-from app.schemas.item import ItemPublic
 
 
 class SaleSchema(BaseModel):
     description: str
     items: list[ItemSaleCreate]
 
-    model_config = {"from_attributes": True}    
+    model_config = {'from_attributes': True}
+
 
 class SaleItemPublic(BaseModel):
-    amount: int 
+    amount: int
     value: float
     items: ItemPublic
 
@@ -29,7 +27,7 @@ class SaleItemPublic(BaseModel):
 class SalePublic(SaleSchema):
     id: int
     total: float
-    items: list[ItemSalePublic] = Field(validation_alias="item_sale")
+    items: list[ItemSalePublic] = Field(validation_alias='item_sale')
     created_at: datetime
     updated_at: datetime
 
@@ -41,6 +39,7 @@ class SaleList(BaseModel):
 class SaleUpdate(BaseModel):
     description: str | None = None
     items: list[ItemSaleUpdate] | None = None
+
 
 class SaleResponse(BaseModel):
     sale: Optional[SalePublic] = None

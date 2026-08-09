@@ -50,6 +50,13 @@ ignore = ["PLW0717"]
 preview = true
 quote-style = 'single'
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["PLR0913"]
+"tests/*.py" = ["PLR0913"]
+
+[tool.ruff.lint.pylint]
+max-args = 8
+
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = '-p no:warnings' 

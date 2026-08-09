@@ -1,26 +1,28 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models import Item, Sale
-
 from typing import Optional
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models import Item, Sale
 from app.models.registry_tables import table_registry
 
 
 @table_registry.mapped_as_dataclass
-class Item_Sale:#association_table
+class Item_Sale:  # association_table
     __tablename__ = 'item_sale'
 
-    item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), primary_key=True, init=False)
-    sale_id: Mapped[int] = mapped_column(ForeignKey('sales.id'), primary_key=True, init=False)
+    item_id: Mapped[int] = mapped_column(
+        ForeignKey('items.id'), primary_key=True, init=False
+    )
+    sale_id: Mapped[int] = mapped_column(
+        ForeignKey('sales.id'), primary_key=True, init=False
+    )
 
     amount: Mapped[Optional[int]]
     value: Mapped[Optional[float]]
 
-    item: Mapped["Item"] = relationship()
+    item: Mapped['Item'] = relationship()
 
-    sales: Mapped["Sale"] = relationship(
-        argument="Sale",
-        back_populates="item_sale",
-        init=False
+    sales: Mapped['Sale'] = relationship(
+        argument='Sale', back_populates='item_sale', init=False
     )

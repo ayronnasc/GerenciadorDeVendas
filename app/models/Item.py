@@ -1,10 +1,9 @@
 from datetime import datetime
 from enum import Enum
 
-from typing import List
+import sqlalchemy as sa
 from sqlalchemy import ForeignKey, func, text
 from sqlalchemy.orm import Mapped, mapped_column
-import sqlalchemy as sa
 
 from app.models.registry_tables import table_registry
 
@@ -28,8 +27,8 @@ class Item:
     value: Mapped[float] = mapped_column(server_default='0.00')
 
     state: Mapped[ItemState] = mapped_column(
-        sa.Enum(ItemState, name="itemstate"), 
-        server_default=text("'available'::itemstate") 
+        sa.Enum(ItemState, name='itemstate'),
+        server_default=text("'available'::itemstate"),
     )
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()

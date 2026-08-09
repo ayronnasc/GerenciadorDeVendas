@@ -4,7 +4,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.Item import Item
-
 from app.models.registry_tables import table_registry
 from app.models.Sale import Sale
 

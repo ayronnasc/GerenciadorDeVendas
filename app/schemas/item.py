@@ -12,17 +12,20 @@ class ItemSchema(BaseModel):
     amount: int
     state: ItemState = Field(default=ItemState.available)
 
-    model_config = {"from_attributes": True}
+    model_config = {'from_attributes': True}
+
 
 class ItemPublic(BaseModel):
     id: int
     title: str
     description: str
+    amount: int
+    value: float
     state: ItemState = Field(default=ItemState.available)
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {'from_attributes': True}
 
 
 class ItemList(BaseModel):
