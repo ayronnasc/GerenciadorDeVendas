@@ -3,6 +3,7 @@ from typing import List
 
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.registry_tables import table_registry
 from app.models import Item
@@ -60,16 +61,31 @@ class Sale:
         return item_list
 
     def add_item(self, item: Item, amount: int = 0, value: float = 0.00):
-        for i_s in self.item_sale:
-            if i_s.item == item:
-                i_s.amount = amount
-                i_s.value  = value
-                return
-
         self.total += (amount * value)
         new_item_sale = Item_Sale(item=item,amount=amount, value=value)
         self.item_sale.append(new_item_sale)
 
+    def update_item(self, item_id: int, amount: int = 0):
+        for i_s in self.item_sale:
+            if i_s.item_id == item_id:
+                self.total -= (i_s.amount * i_s.value)
+                i_s.amount = amount
+                self.total += (amount * i_s.value)
+                return
+
+    async def remove_item(self, item_sale: Item_Sale, session: AsyncSession):
+        for i_s in self.item_sale:
+            if i_s.item_id == item_sale.item_id:
+                self.total -= (i_s.amount * i_s.value)
+                self.item_sale.remove(i_s)
+
+                if len(self.item_sale) == 0:
+                    await session.delete(self)
+                    await session.commit()
+                    return True
+
+                return False
+            return False
     
 
 

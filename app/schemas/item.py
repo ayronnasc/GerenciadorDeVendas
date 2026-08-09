@@ -14,7 +14,6 @@ class ItemSchema(BaseModel):
 
     model_config = {"from_attributes": True}
 
-#Parei aqui! preciso criar outro itempublic para o view do proprio item!
 class ItemPublic(BaseModel):
     id: int
     title: str

@@ -2,12 +2,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from typing import List
+from typing import List, Optional
 
 from app.schemas.item_sale import (
     ItemSaleSchema,
     ItemSaleCreate,
-    ItemSalePublic
+    ItemSalePublic,
+    ItemSaleUpdate
 )
 
 from app.schemas.item import ItemPublic
@@ -17,8 +18,7 @@ class SaleSchema(BaseModel):
     description: str
     items: list[ItemSaleCreate]
 
-    model_config = {"from_attributes": True}
-    
+    model_config = {"from_attributes": True}    
 
 class SaleItemPublic(BaseModel):
     amount: int 
@@ -40,4 +40,8 @@ class SaleList(BaseModel):
 
 class SaleUpdate(BaseModel):
     description: str | None = None
-    items: list[ItemSaleSchema] | None = None
+    items: list[ItemSaleUpdate] | None = None
+
+class SaleResponse(BaseModel):
+    sale: Optional[SalePublic] = None
+    message: Optional[str] = None

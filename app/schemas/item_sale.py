@@ -2,6 +2,8 @@ from pydantic import BaseModel
 
 from app.schemas.item import ItemPublic
 
+from typing import Optional
+
 class ItemSaleSchema(BaseModel):
     sale_id: int
     item_id: int
@@ -21,3 +23,9 @@ class ItemSalePublic(BaseModel):
     item: ItemPublic
 
     model_config = {"from_attributes": True}
+
+class ItemSaleUpdate(BaseModel):
+    item_id: int
+    amount: Optional[int] = None
+
+    delete: Optional[bool] = False
