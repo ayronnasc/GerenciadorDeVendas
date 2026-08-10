@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models import Item
-from backend.app.models.Item_Sale import Item_Sale
-from backend.app.models.registry_tables import table_registry
-from backend.app.schemas.item import ItemPublic
+from app.models.Item_Sale import Item_Sale
+from app.models.registry_tables import table_registry
+from app.schemas.item import ItemPublic
 
 
 @table_registry.mapped_as_dataclass

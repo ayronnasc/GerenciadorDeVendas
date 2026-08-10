@@ -3,9 +3,9 @@ from logging.config import fileConfig
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy import pool
 import asyncio
-from backend.app.models.registry_tables import table_registry
+from app.models.registry_tables import table_registry
 
-from backend.app.settings import Settings
+from app.settings import Settings
 from alembic import context
 
 import sys

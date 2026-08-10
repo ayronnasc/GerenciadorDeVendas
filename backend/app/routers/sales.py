@@ -7,18 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import Item, Sale, User
-from backend.app.models.Item_Sale import Item_Sale
-from backend.app.models.Item import ItemState
-from backend.app.schemas.application import Message
-from backend.app.schemas.filters import FilterSale
-from backend.app.schemas.sale import (
+from app.models.Item_Sale import Item_Sale
+from app.models.Item import ItemState
+from app.schemas.application import Message
+from app.schemas.filters import FilterSale
+from app.schemas.sale import (
     SaleList,
     SalePublic,
     SaleResponse,
     SaleSchema,
     SaleUpdate,
 )
-from backend.app.security import get_current_user, get_session
+from app.security import get_current_user, get_session
 
 router = APIRouter(prefix='/sales', tags=['sales'])
 

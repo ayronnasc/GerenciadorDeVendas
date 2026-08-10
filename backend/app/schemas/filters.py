@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from backend.app.models.Item import ItemState
+from app.models.Item import ItemState
 
 
 class FilterPage(BaseModel):

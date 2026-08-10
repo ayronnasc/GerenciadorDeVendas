@@ -6,12 +6,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.database import get_session
-from backend.app.models.User import User
-from backend.app.schemas.application import Message
-from backend.app.schemas.filters import FilterPage
-from backend.app.schemas.user import UserList, UserPublic, UserSchema
-from backend.app.security import (
+from app.database import get_session
+from app.models.User import User
+from app.schemas.application import Message
+from app.schemas.filters import FilterPage
+from app.schemas.user import UserList, UserPublic, UserSchema
+from app.security import (
     get_current_user,
     get_password_hash,
 )

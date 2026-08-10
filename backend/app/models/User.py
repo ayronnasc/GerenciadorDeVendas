@@ -3,9 +3,9 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from backend.app.models.Item import Item
-from backend.app.models.registry_tables import table_registry
-from backend.app.models.Sale import Sale
+from app.models.Item import Item
+from app.models.registry_tables import table_registry
+from app.models.Sale import Sale
 
 
 @table_registry.mapped_as_dataclass

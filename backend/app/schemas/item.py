@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from backend.app.models.Item import ItemState
+from app.models.Item import ItemState
 
 
 class ItemSchema(BaseModel):

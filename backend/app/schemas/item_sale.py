@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from backend.app.schemas.item import ItemPublic
+from app.schemas.item import ItemPublic
 
 
 class ItemSaleSchema(BaseModel):

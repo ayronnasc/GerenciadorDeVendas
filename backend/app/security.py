@@ -10,9 +10,9 @@ from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.database import get_session
-from backend.app.models.User import User
-from backend.app.settings import Settings
+from app.database import get_session
+from app.models.User import User
+from app.settings import Settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 

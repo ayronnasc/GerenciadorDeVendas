@@ -3,8 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from backend.app.schemas.item import ItemPublic
-from backend.app.schemas.item_sale import (
+from app.schemas.item import ItemPublic
+from app.schemas.item_sale import (
     ItemSaleCreate,
     ItemSalePublic,
     ItemSaleUpdate,

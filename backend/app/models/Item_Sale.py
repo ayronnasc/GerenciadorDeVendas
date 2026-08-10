@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models import Item, Sale
-from backend.app.models.registry_tables import table_registry
+from app.models.registry_tables import table_registry
 
 
 @table_registry.mapped_as_dataclass

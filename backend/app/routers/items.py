@@ -6,11 +6,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Item, User
-from backend.app.models.Item import ItemState
-from backend.app.schemas.application import Message
-from backend.app.schemas.filters import FilterItem
-from backend.app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
-from backend.app.security import get_current_user, get_session
+from app.models.Item import ItemState
+from app.schemas.application import Message
+from app.schemas.filters import FilterItem
+from app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
+from app.security import get_current_user, get_session
 
 router = APIRouter(prefix='/items', tags=['items'])
 
