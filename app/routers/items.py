@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Item, User
+from app.models.Item import ItemState
 from app.schemas.application import Message
 from app.schemas.filters import FilterItem
 from app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
@@ -77,6 +78,10 @@ async def patch_item(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Item not found'
         )
+
+    if item.amount and not item.state: 
+        if item.amount > 0:
+            db_item.state = ItemState.available
 
     for key, value in item.model_dump(exclude_unset=True).items():
         setattr(db_item, key, value)

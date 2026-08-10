@@ -2,11 +2,13 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import Item, Sale, User
 from app.models.Item_Sale import Item_Sale
+from app.models.Item import ItemState
 from app.schemas.application import Message
 from app.schemas.filters import FilterSale
 from app.schemas.sale import (
@@ -39,18 +41,45 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
         _item = await session.scalar(
             select(Item).where(Item.id == item.item_id)
         )
+
         if not _item:
             raise HTTPException(
                 status_code=HTTPStatus.CONFLICT,
                 detail='the item does not exists',
             )
+
+        if item.amount > _item.amount or _item.amount == 0:
+            raise HTTPException(
+                status_code=HTTPStatus.CONFLICT,
+                detail='This amount is not available for this item',
+            )
+
+        if _item.amount - item.amount == 0 :
+            await session.execute(
+                update(Item)
+                .where(Item.id == item.item_id)
+                .values(amount=0, state=ItemState.unavailable)
+            )
+        else:
+            await session.execute(
+                update(Item)
+                .where(Item.id == item.item_id)
+                .values(amount=Item.amount - item.amount)
+            )
+
+        await session.commit()
+
         db_sale.add_item(_item, amount=item.amount, value=_item.value)
 
     session.add(db_sale)
     await session.commit()
-    await session.refresh(db_sale)
+    db_sale_reloaded = await session.scalar(
+        select(Sale)
+        .options(selectinload(Sale.item_sale).selectinload(Item_Sale.item))
+        .where(Sale.id == db_sale.id)
+    )
 
-    return db_sale
+    return db_sale_reloaded
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=SaleList)

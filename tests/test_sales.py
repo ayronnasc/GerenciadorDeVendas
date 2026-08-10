@@ -31,6 +31,8 @@ def test_create_sale(client, token, mock_db_time, items):
 
     EXP_AMOUNT = 1
 
+    previous_amount = items[0].amount
+
     with mock_db_time(model=Sale) as time:
         response = client.post(
             '/sales/',
@@ -47,6 +49,7 @@ def test_create_sale(client, token, mock_db_time, items):
         )
 
     assert response.status_code == HTTPStatus.CREATED
+
     assert response.json() == {
         'description': 'Test Sale Description',
         'items': [
@@ -70,6 +73,9 @@ def test_create_sale(client, token, mock_db_time, items):
         'created_at': f'{time[0].isoformat()}',
         'updated_at': f'{time[1].isoformat()}',
     }
+
+    assert response.json()['items'][0]['item']
+    ['amount'] == previous_amount + EXP_AMOUNT
 
 
 @pytest.mark.asyncio
