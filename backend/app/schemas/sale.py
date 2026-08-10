@@ -1,0 +1,46 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
+from backend.app.schemas.item import ItemPublic
+from backend.app.schemas.item_sale import (
+    ItemSaleCreate,
+    ItemSalePublic,
+    ItemSaleUpdate,
+)
+
+
+class SaleSchema(BaseModel):
+    description: str
+    items: list[ItemSaleCreate]
+
+    model_config = {'from_attributes': True}
+
+
+class SaleItemPublic(BaseModel):
+    amount: int
+    value: float
+    items: ItemPublic
+
+
+class SalePublic(SaleSchema):
+    id: int
+    total: float
+    items: list[ItemSalePublic] = Field(validation_alias='item_sale')
+    created_at: datetime
+    updated_at: datetime
+
+
+class SaleList(BaseModel):
+    sales: list[SalePublic]
+
+
+class SaleUpdate(BaseModel):
+    description: str | None = None
+    items: list[ItemSaleUpdate] | None = None
+
+
+class SaleResponse(BaseModel):
+    sale: Optional[SalePublic] = None
+    message: Optional[str] = None
