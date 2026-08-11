@@ -291,17 +291,17 @@ async def test_delete_sale_error(client, token):
 
 @pytest.mark.asyncio
 async def test_delete_sale_other_user_error(
-    client, other_user, session, token, items
+    client, user, other_user, session, token, items
 ):
 
-    item_other_user = SaleFactory(
+    sale_other_user = SaleFactory(
         user_id=other_user.id, items=[items[0], items[1]]
     )
-    session.add(item_other_user)
+    session.add(sale_other_user)
     await session.commit()
 
     response = client.delete(
-        f'/sales/{item_other_user.id}',
+        f'/sales/{sale_other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 

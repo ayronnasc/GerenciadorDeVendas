@@ -183,7 +183,9 @@ async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
         status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
     )
 
-    result = await session.execute(delete(Sale).where(Sale.id == sale_id))
+    result = await session.execute(
+        delete(Sale).where(Sale.id == sale_id, Sale.user_id == user.id)
+    )
     await session.commit()
 
     if result.rowcount == 0:

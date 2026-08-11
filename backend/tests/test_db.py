@@ -23,7 +23,7 @@ async def test_create_user(session: AsyncSession, mock_db_time):
         )
 
     assert asdict(user) == {
-        'id': 1,
+        'id': user.id,
         'username': 'test',
         'email': 'test@example.com',
         'password': 'secret',

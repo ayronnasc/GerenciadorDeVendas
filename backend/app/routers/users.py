@@ -1,7 +1,8 @@
 from http import HTTPStatus
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.models.User import User
 from app.schemas.application import Message
-from app.schemas.filters import FilterPage
-from app.schemas.user import UserList, UserPublic, UserSchema
+from app.schemas.user import UserPublic, UserSchema
 from app.security import (
     get_current_user,
     get_password_hash,
@@ -56,21 +56,21 @@ async def create_user(user: UserSchema, session: Session):
     return db_user
 
 
-@router.get('/', status_code=HTTPStatus.OK, response_model=UserList)
-async def read_users(
-    session: Session,
-    current_user: CurrentUser,
-    filter_users: Annotated[FilterPage, Query()],
-):
-    users = await session.scalars(
-        select(User).limit(filter_users.limit).offset(filter_users.offset)
-    )
-    return {'users': users}
+# @router.get('/', status_code=HTTPStatus.OK, response_model=UserList)
+# async def read_users(
+#    session: Session,
+#    current_user: CurrentUser,
+#    filter_users: Annotated[FilterPage, Query()],
+# ):
+#    users = await session.scalars(
+#        select(User).limit(filter_users.limit).offset(filter_users.offset)
+#    )
+#    return {'users': users}
 
 
 @router.put('/{user_id}', status_code=HTTPStatus.OK, response_model=UserPublic)
 async def update_user(
-    user_id: int,
+    user_id: UUID,
     user: UserSchema,
     session: Session,
     current_user: CurrentUser,
@@ -101,7 +101,7 @@ async def update_user(
 
 @router.delete('/{user_id}', status_code=HTTPStatus.OK, response_model=Message)
 async def delete_user(
-    user_id: int,
+    user_id: UUID,
     session: Session,
     current_user: CurrentUser,
 ):

@@ -1,9 +1,10 @@
 from http import HTTPStatus
 
 import pytest
-from backend.app.security import create_access_token, get_current_user
 from fastapi import HTTPException
 from jwt import decode, encode
+
+from app.security import create_access_token, get_current_user
 
 
 def test_jwt(settings):

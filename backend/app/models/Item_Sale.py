@@ -12,10 +12,14 @@ class Item_Sale:  # association_table
     __tablename__ = 'item_sale'
 
     item_id: Mapped[int] = mapped_column(
-        ForeignKey('items.id'), primary_key=True, init=False
+        ForeignKey('items.id', ondelete='CASCADE'),
+        primary_key=True,
+        init=False,
     )
     sale_id: Mapped[int] = mapped_column(
-        ForeignKey('sales.id'), primary_key=True, init=False
+        ForeignKey('sales.id', ondelete='CASCADE'),
+        primary_key=True,
+        init=False,
     )
 
     amount: Mapped[Optional[int]]
@@ -24,5 +28,7 @@ class Item_Sale:  # association_table
     item: Mapped['Item'] = relationship()
 
     sales: Mapped['Sale'] = relationship(
-        argument='Sale', back_populates='item_sale', init=False
+        argument='Sale',
+        back_populates='item_sale',
+        init=False,
     )

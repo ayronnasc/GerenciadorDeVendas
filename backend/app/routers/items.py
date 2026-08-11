@@ -1,17 +1,15 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Item, User
-from app.models.Item import ItemState
+from app.models import User
 from app.schemas.application import Message
 from app.schemas.filters import FilterItem
 from app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
 from app.security import get_current_user, get_session
-from app.services.items import add_item
+from app.services.items import add_item, get_items, remove_item, uptodate_item
 
 router = APIRouter(prefix='/items', tags=['items'])
 
@@ -30,54 +28,14 @@ async def list_items(
     session: Session,
     item_filter: Annotated[FilterItem, Query()],
 ):
-
-    query = select(Item).where(Item.user_id == user.id)
-
-    if item_filter.title:
-        query = query.filter(Item.title.contains(item_filter.title))
-    if item_filter.description:
-        query = query.filter(
-            Item.description.contains(item_filter.description)
-        )
-    if item_filter.value:
-        query = query.filter(Item.value == item_filter.value)
-    if item_filter.amount:
-        query = query.filter(Item.amount == item_filter.amount)
-    if item_filter.state:
-        query = query.filter(Item.state == item_filter.state)
-    items = await session.scalars(
-        query.limit(item_filter.limit).offset(item_filter.offset)
-    )
-
-    return {'items': items.all()}
+    return await get_items(user, session, item_filter)
 
 
 @router.patch('/{item_id}', response_model=ItemPublic)
 async def patch_item(
     item_id: int, session: Session, user: CurrentUser, item: ItemUpdate
 ):
-
-    db_item = await session.scalar(
-        select(Item).where(Item.user_id == user.id, Item.id == item_id)
-    )
-
-    if not db_item:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Item not found'
-        )
-
-    if item.amount and not item.state:
-        if item.amount > 0:
-            db_item.state = ItemState.available
-
-    for key, value in item.model_dump(exclude_unset=True).items():
-        setattr(db_item, key, value)
-
-    session.add(db_item)
-    await session.commit()
-    await session.refresh(db_item)
-
-    return db_item
+    return await uptodate_item(item_id, item, session, user)
 
 
 @router.delete('/{item_id}', status_code=HTTPStatus.OK, response_model=Message)
@@ -86,16 +44,4 @@ async def delete_item(
     user: CurrentUser,
     session: Session,
 ):
-    item = await session.scalar(
-        select(Item).where(Item.user_id == user.id, Item.id == item_id)
-    )
-
-    if not item:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Item not found'
-        )
-
-    await session.delete(item)
-    await session.commit()
-
-    return {'message': 'Item has been deleted sucessfully'}
+    return await remove_item(item_id, session, user)

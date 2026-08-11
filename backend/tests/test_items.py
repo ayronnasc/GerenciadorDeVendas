@@ -5,9 +5,9 @@ from http import HTTPStatus
 import factory
 import factory.fuzzy
 import pytest
-from backend.app.models.Item import ItemState
 
 from app.models import Item
+from app.models.Item import ItemState
 
 
 class ItemFactory(factory.Factory):
@@ -252,9 +252,12 @@ async def test_delete_item_other_user_error(
 
 
 @pytest.mark.asyncio
-async def test_patch_item_error(client, token):
+async def test_patch_item_error(client, token, user):
+
     response = client.patch(
-        '/items/10', json={}, headers={'Authorization': f'Bearer {token}'}
+        '/items/10',
+        json={'title': 'some title'},
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -263,11 +266,12 @@ async def test_patch_item_error(client, token):
 
 @pytest.mark.asyncio
 async def test_patch_item(client, token, session, user, mock_db_time):
-    item = ItemFactory(user_id=user.id)
+    item = ItemFactory(user_id=str(user.id))
 
     with mock_db_time(model=Item, time=datetime(2026, 7, 21)) as time:
         item.created_at = f'{time[0].isoformat()}'
         item.updated_at = f'{time[1].isoformat()}'
+
         session.add(item)
         await session.commit()
         await session.refresh(item)

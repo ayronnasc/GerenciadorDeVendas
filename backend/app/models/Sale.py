@@ -37,6 +37,7 @@ class Sale:
         argument='Item_Sale',
         init=False,
         cascade='all, delete-orphan',
+        passive_deletes=True,
         lazy='selectin',
         default_factory=list,
         back_populates='sales',

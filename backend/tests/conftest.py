@@ -6,18 +6,17 @@ import factory
 import factory.fuzzy
 import pytest
 import pytest_asyncio
-from backend.app.app import app
-from backend.app.database import get_session
-from backend.app.models import table_registry
-from backend.app.models.Item import ItemState
-from backend.app.security import get_password_hash
-from backend.app.settings import Settings
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
-from app.models import Item, User
+from app.app import app
+from app.database import get_session
+from app.models import Item, User, table_registry
+from app.models.Item import ItemState
+from app.security import get_password_hash
+from app.settings import Settings
 
 
 @pytest.fixture
@@ -35,7 +34,10 @@ def client(session):
 @pytest.fixture(scope='session')
 def engine():
     with PostgresContainer('postgres:17', driver='psycopg') as postgres:
-        yield create_async_engine(postgres.get_connection_url())
+        yield create_async_engine(
+            postgres.get_connection_url(),
+            connect_args={'prepare_threshold': None},
+        )
 
 
 @pytest_asyncio.fixture
