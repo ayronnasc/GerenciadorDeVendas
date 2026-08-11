@@ -2,12 +2,10 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import delete, select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models import Item, Sale, User
-from app.models.Item import ItemState
 from app.models.Item_Sale import Item_Sale
 from app.schemas.application import Message
 from app.schemas.filters import FilterSale
@@ -19,6 +17,7 @@ from app.schemas.sale import (
     SaleUpdate,
 )
 from app.security import get_current_user, get_session
+from app.services.sales import S_create_sale, S_delete_sale
 
 router = APIRouter(prefix='/sales', tags=['sales'])
 
@@ -28,60 +27,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post('/', response_model=SalePublic, status_code=HTTPStatus.CREATED)
 async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
-
-    total = 0.0
-
-    db_sale = Sale(
-        description=sale.description,
-        user_id=user.id,
-        total=total,
-    )
-
-    for item in sale.items:
-        _item = await session.scalar(
-            select(Item).where(
-                Item.id == item.item_id, Item.user_id == user.id
-            )
-        )
-
-        if not _item:
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail='the item does not exists',
-            )
-
-        if item.amount > _item.amount or _item.amount == 0:
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail='This amount is not available for this item',
-            )
-
-        if _item.amount - item.amount == 0:
-            await session.execute(
-                update(Item)
-                .where(Item.id == item.item_id)
-                .values(amount=0, state=ItemState.unavailable)
-            )
-        else:
-            await session.execute(
-                update(Item)
-                .where(Item.id == item.item_id)
-                .values(amount=Item.amount - item.amount)
-            )
-
-        await session.commit()
-
-        db_sale.add_item(_item, amount=item.amount, value=_item.value)
-
-    session.add(db_sale)
-    await session.commit()
-    db_sale_reloaded = await session.scalar(
-        select(Sale)
-        .options(selectinload(Sale.item_sale).selectinload(Item_Sale.item))
-        .where(Sale.id == db_sale.id)
-    )
-
-    return db_sale_reloaded
+    return await S_create_sale(sale, session, user)
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=SaleList)
@@ -179,16 +125,4 @@ async def update_sale(
 
 @router.delete('/{sale_id}', response_model=Message, status_code=HTTPStatus.OK)
 async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
-    delete_exception = HTTPException(
-        status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
-    )
-
-    result = await session.execute(
-        delete(Sale).where(Sale.id == sale_id, Sale.user_id == user.id)
-    )
-    await session.commit()
-
-    if result.rowcount == 0:
-        raise delete_exception
-
-    return {'message': 'Sale deleted with success!'}
+    return await S_delete_sale(sale_id, session, user)

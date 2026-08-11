@@ -1,19 +1,14 @@
-from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.models.User import User
 from app.schemas.application import Token
-from app.security import (
-    create_access_token,
-    get_current_user,
-    verify_password,
-)
+from app.security import get_current_user
+from app.services.auth import S_refresh_token, get_token
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
@@ -26,32 +21,9 @@ async def login_for_acess_token(
     session: Session,
     form_data: OAuth2Form,
 ):
-    user = await session.scalar(
-        select(User).where(User.email == form_data.username)
-    )
-
-    if not user:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Incorret email or password',
-        )
-
-    if not verify_password(form_data.password, user.password):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Incorret email or password',
-        )
-
-    acess_token = create_access_token({
-        'sub': user.email,
-        'id': str(user.id),
-    })
-
-    return {'access_token': acess_token, 'token_type': 'Bearer'}
+    return await get_token(session, form_data)
 
 
 @router.post('/refresh_token', response_model=Token)
 async def refresh_token(user: Annotated[User, Depends(get_current_user)]):
-    new_access_token = create_access_token(data={'sub': user.email})
-
-    return {'access_token': new_access_token, 'token_type': 'Bearer'}
+    return await S_refresh_token(user)
