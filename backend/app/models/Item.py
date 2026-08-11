@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 import sqlalchemy as sa
 from sqlalchemy import ForeignKey, func, text
@@ -37,4 +38,4 @@ class Item:
         init=False, server_default=func.now(), onupdate=func.now()
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))

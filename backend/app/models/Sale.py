@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +31,7 @@ class Sale:
         init=False, server_default=func.now(), onupdate=func.now()
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
 
     item_sale: Mapped[List['Item_Sale']] = relationship(
         argument='Item_Sale',

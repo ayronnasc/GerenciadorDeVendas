@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import delete, select, update
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -181,7 +180,7 @@ async def update_sale(
 @router.delete('/{sale_id}', response_model=Message, status_code=HTTPStatus.OK)
 async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
     delete_exception = HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
+        status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
     )
 
     result = await session.execute(delete(Sale).where(Sale.id == sale_id))
@@ -191,5 +190,3 @@ async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
         raise delete_exception
 
     return {'message': 'Sale deleted with success!'}
-
-    
