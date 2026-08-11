@@ -2,13 +2,14 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import Item, Sale, User
-from app.models.Item_Sale import Item_Sale
 from app.models.Item import ItemState
+from app.models.Item_Sale import Item_Sale
 from app.schemas.application import Message
 from app.schemas.filters import FilterSale
 from app.schemas.sale import (
@@ -39,7 +40,9 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
 
     for item in sale.items:
         _item = await session.scalar(
-            select(Item).where(Item.id == item.item_id)
+            select(Item).where(
+                Item.id == item.item_id, Item.user_id == user.id
+            )
         )
 
         if not _item:
@@ -54,7 +57,7 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
                 detail='This amount is not available for this item',
             )
 
-        if _item.amount - item.amount == 0 :
+        if _item.amount - item.amount == 0:
             await session.execute(
                 update(Item)
                 .where(Item.id == item.item_id)
@@ -177,16 +180,16 @@ async def update_sale(
 
 @router.delete('/{sale_id}', response_model=Message, status_code=HTTPStatus.OK)
 async def delete_sale(sale_id: int, session: Session, user: CurrentUser):
-    db_sale = await session.scalar(
-        select(Sale).where(Sale.id == sale_id, Sale.user_id == user.id)
+    delete_exception = HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
     )
 
-    if not db_sale:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
-        )
-
-    await session.delete(db_sale)
+    result = await session.execute(delete(Sale).where(Sale.id == sale_id))
     await session.commit()
 
+    if result.rowcount == 0:
+        raise delete_exception
+
     return {'message': 'Sale deleted with success!'}
+
+    

@@ -5,9 +5,9 @@ from http import HTTPStatus
 import factory
 import factory.fuzzy
 import pytest
+from backend.app.models.Item import ItemState
 
 from app.models import Item
-from backend.app.models.Item import ItemState
 
 
 class ItemFactory(factory.Factory):

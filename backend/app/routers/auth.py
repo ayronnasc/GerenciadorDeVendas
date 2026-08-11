@@ -42,7 +42,10 @@ async def login_for_acess_token(
             detail='Incorret email or password',
         )
 
-    acess_token = create_access_token({'sub': user.email})
+    acess_token = create_access_token({
+        'sub': user.email,
+        'id': user.id,
+    })
 
     return {'access_token': acess_token, 'token_type': 'Bearer'}
 

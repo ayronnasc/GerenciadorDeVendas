@@ -11,6 +11,7 @@ from app.schemas.application import Message
 from app.schemas.filters import FilterItem
 from app.schemas.item import ItemList, ItemPublic, ItemSchema, ItemUpdate
 from app.security import get_current_user, get_session
+from app.services.items import add_item
 
 router = APIRouter(prefix='/items', tags=['items'])
 
@@ -20,21 +21,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post('/', response_model=ItemPublic, status_code=HTTPStatus.CREATED)
 async def create_Item(item: ItemSchema, session: Session, user: CurrentUser):
-
-    db_item = Item(
-        title=item.title,
-        description=item.description,
-        value=item.value,
-        amount=item.amount,
-        state=item.state,
-        user_id=user.id,
-    )
-
-    session.add(db_item)
-    await session.commit()
-    await session.refresh(db_item)
-
-    return db_item
+    return await add_item(item, session, user)
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=ItemList)
@@ -79,7 +66,7 @@ async def patch_item(
             status_code=HTTPStatus.NOT_FOUND, detail='Item not found'
         )
 
-    if item.amount and not item.state: 
+    if item.amount and not item.state:
         if item.amount > 0:
             db_item.state = ItemState.available
 

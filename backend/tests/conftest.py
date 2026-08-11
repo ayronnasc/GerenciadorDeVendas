@@ -6,18 +6,18 @@ import factory
 import factory.fuzzy
 import pytest
 import pytest_asyncio
+from backend.app.app import app
+from backend.app.database import get_session
+from backend.app.models import table_registry
+from backend.app.models.Item import ItemState
+from backend.app.security import get_password_hash
+from backend.app.settings import Settings
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
-from backend.app.app import app
-from backend.app.database import get_session
 from app.models import Item, User
-from backend.app.models import table_registry
-from backend.app.models.Item import ItemState
-from backend.app.security import get_password_hash
-from backend.app.settings import Settings
 
 
 @pytest.fixture
