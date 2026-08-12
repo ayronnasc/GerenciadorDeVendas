@@ -1,12 +1,10 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Item, Sale, User
-from app.models.Item_Sale import Item_Sale
+from app.models import User
 from app.schemas.application import Message
 from app.schemas.filters import FilterSale
 from app.schemas.sale import (
@@ -17,7 +15,12 @@ from app.schemas.sale import (
     SaleUpdate,
 )
 from app.security import get_current_user, get_session
-from app.services.sales import S_create_sale, S_delete_sale
+from app.services.sales import (
+    S_create_sale,
+    S_delete_sale,
+    S_get_sales,
+    S_update_sale,
+)
 
 router = APIRouter(prefix='/sales', tags=['sales'])
 
@@ -31,31 +34,12 @@ async def create_sale(sale: SaleSchema, session: Session, user: CurrentUser):
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=SaleList)
-async def list_items(
+async def list_sales(
     user: CurrentUser,
     session: Session,
     sale_filter: Annotated[FilterSale, Query()],
 ):
-
-    query = select(Sale).where(Sale.user_id == user.id)
-
-    if sale_filter.total:
-        query = query.filter(Sale.total == sale_filter.total)
-    if sale_filter.description:
-        query = query.filter(
-            Sale.description.contains(sale_filter.description)
-        )
-    if sale_filter.greater_than:
-        query = query.filter(Sale.total >= sale_filter.greater_than)
-
-    if sale_filter.less_than:
-        query = query.filter(Sale.total <= sale_filter.less_than)
-
-    sales = await session.scalars(
-        query.limit(sale_filter.limit).offset(sale_filter.offset)
-    )
-
-    return {'sales': sales.all()}
+    return await S_get_sales(user, session, sale_filter)
 
 
 @router.patch(
@@ -64,63 +48,7 @@ async def list_items(
 async def update_sale(
     sale_id: int, sale: SaleUpdate, session: Session, user: CurrentUser
 ):
-
-    db_sale = await session.scalar(
-        select(Sale).where(Sale.id == sale_id, Sale.user_id == user.id)
-    )
-
-    if not db_sale:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Sale not found'
-        )
-
-    if sale.items:
-        for item in sale.items:
-            if not item.item_id:
-                raise HTTPException(
-                    status_code=HTTPStatus.CONFLICT, detail='item_id is need'
-                )
-
-            p_item = await session.scalar(
-                select(Item_Sale).where(Item_Sale.item_id == item.item_id)
-            )
-            if not p_item:
-                # new item in sale
-                new_item = await session.scalar(
-                    select(Item).where(Item.id == item.item_id)
-                )
-                if not new_item:
-                    raise HTTPException(
-                        status_code=HTTPStatus.NOT_FOUND,
-                        detail='Item not found',
-                    )
-
-                db_sale.add_item(
-                    new_item, amount=item.amount, value=new_item.value
-                )
-                continue
-
-            if item.delete:
-                sale_deleted = await db_sale.remove_item(p_item, session)
-
-                if sale_deleted:
-                    return SaleResponse(
-                        message='Sale has been deleted for does '
-                        'not exists items inside'
-                    )
-                else:
-                    continue
-
-            db_sale.update_item(p_item.item_id, item.amount)
-
-    if sale.description:
-        db_sale.description = sale.description
-
-    session.add(db_sale)
-    await session.commit()
-    await session.refresh(db_sale)
-
-    return SaleResponse(sale=db_sale)
+    return await S_update_sale(sale_id, sale, session, user)
 
 
 @router.delete('/{sale_id}', response_model=Message, status_code=HTTPStatus.OK)

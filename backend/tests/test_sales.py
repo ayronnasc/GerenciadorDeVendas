@@ -27,6 +27,83 @@ class SaleFactory(factory.Factory):
                 self.add_item(item=item, amount=amount, value=item.value)
 
 
+def test_create_sale_error_item_not_exists(client, token, mock_db_time, items):
+
+    response = client.post(
+        '/sales/',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'description': 'Test Sale Description',
+            'items': [{'item_id': 277, 'amount': 1}],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json()['detail'] == 'the item does not exists'
+
+
+def test_create_sale_error_excessive_item_amount(client, token, items):
+    response = client.post(
+        '/sales/',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'description': 'Test Sale Description',
+            'items': [{'item_id': items[0].id, 'amount': 676767}],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json()
+    ['detail'] == 'This amount is not available for this item'
+
+
+def test_create_sale_with_same_amount_item_request(
+    client, token, items, mock_db_time
+):
+    previous_amount = items[0].amount
+
+    with mock_db_time(model=Sale) as time:
+        response = client.post(
+            '/sales/',
+            headers={'Authorization': f'Bearer {token}'},
+            json={
+                'description': 'Test Sale Description',
+                'items': [
+                    {
+                        'item_id': items[0].id,
+                        'amount': previous_amount,
+                    }
+                ],
+            },
+        )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    assert response.json() == {
+        'description': 'Test Sale Description',
+        'items': [
+            {
+                'amount': previous_amount,
+                'value': items[0].value,
+                'item': {
+                    'id': items[0].id,
+                    'title': items[0].title,
+                    'description': items[0].description,
+                    'amount': 0,
+                    'value': items[0].value,
+                    'state': 'unavailable',
+                    'created_at': items[0].created_at.isoformat(),
+                    'updated_at': items[0].updated_at.isoformat(),
+                },
+            }
+        ],
+        'id': 1,
+        'total': items[0].value * previous_amount,
+        'created_at': f'{time[0].isoformat()}',
+        'updated_at': f'{time[1].isoformat()}',
+    }
+
+
 def test_create_sale(client, token, mock_db_time, items):
 
     EXP_AMOUNT = 1
@@ -76,6 +153,33 @@ def test_create_sale(client, token, mock_db_time, items):
 
     assert response.json()['items'][0]['item']
     ['amount'] == previous_amount + EXP_AMOUNT
+
+
+@pytest.mark.asyncio
+async def test_list_sales_error(
+    session, client, other_user, user, token, items
+):
+    # arrange
+    session.add_all(
+        SaleFactory.create_batch(
+            5,
+            user_id=other_user.id,
+            items=[items[0], items[1]],
+        )
+    )
+
+    await session.commit()
+
+    # act
+    response = client.get(
+        '/sales/',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    # assert
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json()
+    ['detail'] == 'Sale not found for this search'
 
 
 @pytest.mark.asyncio
@@ -320,6 +424,91 @@ async def test_patch_sale_error(client, token):
 
 
 @pytest.mark.asyncio
+async def test_patch_sale_error_item_not_exists(
+    client, token, user, items, session
+):
+    sale = SaleFactory(user_id=user.id, items=[items[0], items[1]])
+
+    session.add(sale)
+
+    await session.commit()
+    await session.refresh(sale)
+    response = client.patch(
+        f'/sales/{sale.id}',
+        json={
+            'description': 'teste!',
+            'items': [{'item_id': 8982, 'amount': 2}],
+        },
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Item not found'}
+
+
+@pytest.mark.asyncio
+async def test_patch_sale_delete_if_not_items_inside(
+    client, token, user, items, session
+):
+    sale = SaleFactory(user_id=user.id, items=[items[0]])
+
+    session.add(sale)
+
+    await session.commit()
+    await session.refresh(sale)
+    response = client.patch(
+        f'/sales/{sale.id}',
+        json={
+            'description': 'teste!',
+            'items': [{'item_id': items[0].id, 'delete': True}],
+        },
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'sale': None,
+        'message': 'Sale has been deleted for does not exists items inside',
+    }
+
+
+@pytest.mark.asyncio
+async def test_patch_sale_delete_items(client, token, user, items, session):
+    sale = SaleFactory(user_id=user.id, items=[items[0], items[1]])
+
+    session.add(sale)
+
+    await session.commit()
+    await session.refresh(sale)
+    response = client.patch(
+        f'/sales/{sale.id}',
+        json={
+            'description': 'teste!',
+            'items': [{'item_id': items[0].id, 'delete': True}],
+        },
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['sale']['items'] == [
+        {
+            'amount': 1,
+            'value': items[1].value,
+            'item': {
+                'id': items[1].id,
+                'title': items[1].title,
+                'description': items[1].description,
+                'amount': items[1].amount,
+                'value': items[1].value,
+                'state': 'available',
+                'created_at': items[1].created_at.isoformat(),
+                'updated_at': items[1].updated_at.isoformat(),
+            },
+        }
+    ]
+
+
+@pytest.mark.asyncio
 async def test_patch_sale(client, token, session, user, mock_db_time, items):
     sale = SaleFactory(user_id=user.id, items=[items[0], items[1]])
 
@@ -363,6 +552,76 @@ async def test_patch_sale(client, token, session, user, mock_db_time, items):
             },
             {
                 'amount': 2,
+                'value': items[0].value,
+                'item': {
+                    'id': items[0].id,
+                    'title': items[0].title,
+                    'description': items[0].description,
+                    'amount': items[0].amount,
+                    'value': items[0].value,
+                    'state': 'available',
+                    'created_at': items[0].created_at.isoformat(),
+                    'updated_at': items[0].updated_at.isoformat(),
+                },
+            },
+        ]
+
+        assert response.json()['sale']['total'] == round(expected_total, 2)
+
+        assert response.json()['sale']
+        ['created_at'] == sale.created_at.isoformat()
+        assert response.json()['sale']['updated_at'] != time[1].isoformat()
+
+
+@pytest.mark.asyncio
+async def test_patch_sale_new_item(
+    client, token, session, user, mock_db_time, items
+):
+    sale = SaleFactory(user_id=user.id, items=[items[0]])
+
+    with mock_db_time(model=Sale, time=datetime(2026, 7, 21)) as time:
+        sale.created_at = f'{time[0].isoformat()}'
+        sale.updated_at = f'{time[1].isoformat()}'
+
+        session.add(sale)
+
+        await session.commit()
+        await session.refresh(sale)
+
+        response = client.patch(
+            f'/sales/{sale.id}',
+            json={
+                'description': 'teste!',
+                'items': [
+                    {'item_id': items[1].id, 'amount': 2},
+                    {'item_id': items[0].id, 'amount': 3},
+                ],
+            },
+            headers={'Authorization': f'Bearer {token}'},
+        )
+
+        expected_total = (items[0].value * 3) + (items[1].value * 2)
+
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()['sale']['description'] == 'teste!'
+
+        assert response.json()['sale']['items'] == [
+            {
+                'amount': 2,
+                'value': items[1].value,
+                'item': {
+                    'id': items[1].id,
+                    'title': items[1].title,
+                    'description': items[1].description,
+                    'amount': items[1].amount,
+                    'value': items[1].value,
+                    'state': 'available',
+                    'created_at': items[1].created_at.isoformat(),
+                    'updated_at': items[1].updated_at.isoformat(),
+                },
+            },
+            {
+                'amount': 3,
                 'value': items[0].value,
                 'item': {
                     'id': items[0].id,

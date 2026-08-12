@@ -9,7 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models import Item
 from app.models.Item_Sale import Item_Sale
 from app.models.registry_tables import table_registry
-from app.schemas.item import ItemPublic
 
 
 @table_registry.mapped_as_dataclass
@@ -42,26 +41,6 @@ class Sale:
         default_factory=list,
         back_populates='sales',
     )
-
-    @property
-    def item_list(self) -> list[ItemPublic]:
-        item_list = []
-        for item_sale in self.item_sale:
-            item_sale.item.value = item_sale.value
-            item_sale.item.amount = item_sale.amount
-            item_list.append(
-                ItemPublic(
-                    id=item_sale.item.id,
-                    title=item_sale.item.title,
-                    description=item_sale.item.description,
-                    value=item_sale.item.value,
-                    amount=item_sale.item.amount,
-                    state=item_sale.item.state,
-                    created_at=item_sale.item.created_at,
-                    updated_at=item_sale.item.updated_at,
-                )
-            )
-        return item_list
 
     def add_item(self, item: Item, amount: int = 0, value: float = 0.00):
         self.total += amount * value

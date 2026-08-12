@@ -68,6 +68,24 @@ async def test_list_items_should_return_5_items(session, client, user, token):
 
 
 @pytest.mark.asyncio
+async def test_list_items_error(session, client, user, other_user, token):
+    # arrange
+    session.add_all(ItemFactory.create_batch(5, user_id=other_user.id))
+    await session.commit()
+
+    # act
+    response = client.get(
+        '/items/',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    # assert
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json
+    ['details'] == 'Not found items for this search'
+
+
+@pytest.mark.asyncio
 async def test_list_items_pagination_should_return_2_items(
     client, user, session, token
 ):
@@ -290,3 +308,63 @@ async def test_patch_item(client, token, session, user, mock_db_time):
         assert response.json()['updated_at'] != time[1].isoformat(
             timespec='seconds'
         )
+
+
+@pytest.mark.asyncio
+async def test_patch_item_with_amount_but_no_state_atributes(
+    client, token, session, user, mock_db_time
+):
+    item = ItemFactory(user_id=str(user.id), amount=0, state='unavailable')
+
+    with mock_db_time(model=Item, time=datetime(2026, 7, 21)) as time:
+        EXPECTED_AMOUNT = 12
+        item.created_at = f'{time[0].isoformat()}'
+        item.updated_at = f'{time[1].isoformat()}'
+
+        session.add(item)
+        await session.commit()
+        await session.refresh(item)
+
+        response = client.patch(
+            f'/items/{item.id}',
+            json={'amount': EXPECTED_AMOUNT},
+            headers={'Authorization': f'Bearer {token}'},
+        )
+
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()['created_at'] == item.created_at.isoformat(
+            timespec='seconds'
+        )
+        assert response.json()['amount'] == EXPECTED_AMOUNT
+        assert response.json()['state'] == 'available'
+
+        assert response.json()['updated_at'] != time[1].isoformat(
+            timespec='seconds'
+        )
+
+
+@pytest.mark.asyncio
+async def test_patch_item_error_item_not_found(
+    client, token, session, user, mock_db_time, other_user
+):
+    item = ItemFactory(
+        user_id=str(other_user.id), amount=0, state='unavailable'
+    )
+
+    with mock_db_time(model=Item, time=datetime(2026, 7, 21)) as time:
+        item.created_at = f'{time[0].isoformat()}'
+        item.updated_at = f'{time[1].isoformat()}'
+
+        session.add(item)
+        await session.commit()
+        await session.refresh(item)
+
+        response = client.patch(
+            f'/items/{item.id}',
+            json={},
+            headers={'Authorization': f'Bearer {token}'},
+        )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert response.json()
+    ['detail'] == 'Item data is need to update'

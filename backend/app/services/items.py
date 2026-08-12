@@ -52,13 +52,15 @@ async def get_items(
         query.limit(item_filter.limit).offset(item_filter.offset)
     )
 
-    if not items:
+    result = items.all()
+
+    if not result:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='Not found items for query params',
+            detail='Not found items for this search',
         )
 
-    return {'items': items.all()}
+    return {'items': result}
 
 
 async def remove_item(item_id: int, session: AsyncSession, user: User):
@@ -97,8 +99,8 @@ async def uptodate_item(
             .returning(Item)
         )
 
-        if hasattr(item_data, 'amount'):
-            if item_data.amount > 0 and not hasattr(item_data, 'state'):
+        if 'amount' in item_data:
+            if item_data['amount'] > 0 and 'state' not in item_data:
                 item = await session.execute(
                     update(Item)
                     .where(Item.id == item_id, Item.user_id == user.id)
@@ -115,4 +117,7 @@ async def uptodate_item(
 
         return result
 
-    raise item_exception
+    raise HTTPException(
+        status_code=HTTPStatus.UNPROCESSABLE_CONTENT,
+        detail='Item data is need to update',
+    )
