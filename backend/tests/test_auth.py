@@ -26,7 +26,7 @@ def test_token_expired_after_time(client, user):
         assert response.status_code == HTTPStatus.OK
         token = response.json()['access_token']
 
-    with freeze_time('2023-07-14 12:31:00'):
+    with freeze_time('2023-07-21 12:31:00'):
         response = client.put(
             f'/users/{user.id}',
             headers={'Authorization': f'Bearer {token}'},
@@ -64,10 +64,19 @@ def test_token_wrong_user(client):
     assert response.json() == {'detail': 'Incorret email or password'}
 
 
-def test_refresh_token(client, token):
+def test_refresh_token(client, user):
+
+    r1 = client.post(
+        'auth/token',
+        data={
+            'username': user.email,
+            'password': user.clean_password,
+        },
+    )
+
     response = client.post(
         '/auth/refresh_token',
-        headers={'Authorization': f'Bearer {token}'},
+        headers={'Authorization': f'Bearer {r1.json()["access_token"]}'},
     )
 
     data = response.json()
@@ -79,6 +88,7 @@ def test_refresh_token(client, token):
 
 
 def test_token_expired_dont_refresh(client, user):
+
     with freeze_time('2023-07-14 12:00:00'):
         response = client.post(
             '/auth/token',
@@ -86,12 +96,9 @@ def test_token_expired_dont_refresh(client, user):
         )
 
         assert response.status_code == HTTPStatus.OK
-        token = response.json()['access_token']
 
-    with freeze_time('2023-07-14 12:31:00'):
-        response = client.post(
-            '/auth/refresh_token', headers={'Authorization': f'Bearer {token}'}
-        )
+    with freeze_time('2023-07-22 12:00:00'):
+        response = client.post('/auth/refresh_token')
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
-        assert response.json() == {'detail': 'Could not validate credentials'}
+        assert response.json() == {'detail': 'Not authenticated'}
